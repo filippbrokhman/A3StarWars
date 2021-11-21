@@ -13,9 +13,9 @@
 #define Z_OFFSET   1
 
 //all robot dimensions
-float robotBodyWidth = 8.0;
-float robotBodyLength = 24.0;
-float robotBodyDepth = 8.0;
+float robotBodyWidth = 2.0;
+float robotBodyLength = 6.0;
+float robotBodyDepth = 2.0;
 float headWidth = 0.7 * robotBodyWidth;
 float headLength = 0.4 * robotBodyWidth;
 float headDepth = 0.7 * robotBodyWidth;
@@ -40,6 +40,7 @@ float wheelInternalLength = robotBodyWidth;
 float headAngle = 0.0;
 float maxHeadAngleUp = -40;
 float maxHeadAngleDown = 20;
+float robotYOffset = 0.5 * robotBodyLength + wheelInternalRadius;
 
 GLfloat robotBody_mat_ambient[] = { 0.0f,0.0f,0.0f,1.0f };
 GLfloat robotBody_mat_specular[] = { 0.45f,0.55f,0.45f,1.0f };
@@ -469,6 +470,7 @@ void keyboardHandler(unsigned char key, int x, int y)
 		// reset object position at beginning of curve
 		curveIndex = 0;
 		rotateAngle = 0;
+		rotationDirection = -1;
 		forwardVector();
 		glutSetWindow(window3D);
 		glutPostRedisplay();
@@ -724,7 +726,7 @@ void drawRobot()
 	//draws the robot with respect to keyboard commands
 	glPushMatrix();
 	// spin robot on base.
-
+	
 	//draw the robot
 	drawHead();
 	drawRightArm();
@@ -735,22 +737,9 @@ void drawRobot()
 	//drawLowerBody();
 
 	glPopMatrix();
+
 }
 
-
-void drawBody()
-{
-	//part of skeleton code, unused in final product
-	glMaterialfv(GL_FRONT, GL_AMBIENT, robotBody_mat_ambient);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, robotBody_mat_specular);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, robotBody_mat_diffuse);
-	glMaterialfv(GL_FRONT, GL_SHININESS, robotBody_mat_shininess);
-
-	glPushMatrix();
-	glScalef(robotBodyWidth, robotBodyLength, robotBodyDepth);
-	glutSolidCube(1.0);
-	glPopMatrix();
-}
 
 void drawHead()
 {
@@ -785,8 +774,8 @@ void drawHead()
 void drawTireCube() {
 	//draws a tire that goes on the wheel to help show it rotating as the robot moves
 	glPushMatrix();
-	glTranslatef(-(0.5 * wheelInternalLength + 0.5), 0.5 * wheelInternalLength + 0.5, 0);
-	glutSolidCube(1.0);
+	glTranslatef(-(0.3 * wheelInternalLength + 0.3 * wheelInternalLength), 0.3 * wheelInternalLength + 0.3 * wheelInternalLength, 0);
+	glutSolidCube(0.3 * wheelInternalLength);
 	glPopMatrix();
 }
 
@@ -955,10 +944,12 @@ void drawBot()
 		glPushMatrix();
 		//glTranslatef(subcurve.curvePoints[curveIndex].x, 0, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
 		//glutSolidSphere(0.9, 20, 20);
-		glTranslatef(subcurve.curvePoints[curveIndex].x, 0, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
+		glTranslatef(subcurve.curvePoints[curveIndex].x, robotYOffset, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
 		//I rotate by an additional 90 degrees since otherwise, it would be perpindicular to the line
-		glRotatef(90, 0, 1, 0);
+		glRotatef(90, 0, -rotationDirection, 0);
 		glRotatef(angle, 0, 1, 0);
+		//glRotatef(rotateAngle, 0, 0, rotationDirection);
+
 		drawRobot();
 		glPopMatrix();
 	}
