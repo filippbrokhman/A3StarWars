@@ -470,8 +470,15 @@ void keyboardHandler(unsigned char key, int x, int y)
 		// reset object position at beginning of curve
 		curveIndex = 0;
 		rotateAngle = 0;
-		rotationDirection = -1;
 		forwardVector();
+		if (newXPoint < 0)
+		{
+			rotationDirection = 1;
+		}
+		else
+		{
+			rotationDirection = -1;
+		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
