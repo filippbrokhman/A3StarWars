@@ -71,17 +71,29 @@ float cylinderHeight = 1;
 
 float newXPoint;
 float newYPoint;
+float new2XPoint;
+float new2YPoint;
+float headXPoint;
+float headYPoint;
 bool stop = false;
 int rotateAngle = 0;
-int rotationDirection = -1;
-int offset = 0;
+int rotateAngle2 = 0;
+int rotationDirectionX = -1;
+int rotationDirection2X = -1;
+int rotationDirectionY = -1;
+int cannonXLocation = 0;
+int cannonZLocation = 10;
+int robotCounter = 0;
+
 
 int numCirclePoints = 30;
 double circleRadius = 0.2;
 int hoveredCircle = -1;
 int curveIndex = 0;
+int curveIndex2 = 0;
 int currentCurvePoint = 0;
 int angle = 0;
+int angle2 = 0;
 int animate = 0;
 int delay = 15; // milliseconds
 
@@ -121,6 +133,7 @@ GLdouble spin  = 0.0;
 
 // The 2D animation path curve is a subdivision curve
 SubdivisionCurve subcurve;
+SubdivisionCurve subcurve2;
 
 // Use circles to **draw** (i.e. visualize) subdivision curve control points
 Circle circles[MAXCONTROLPOINTS];
@@ -137,18 +150,21 @@ GLdouble fov = 60.0;
 void forwardVector();
 void drawCubeTire();
 void drawRobot();
+void drawRobot2();
 void drawBody();
 void drawHead();
 void drawLowerBody();
 void drawLeftArm();
 void drawRightArm();
 void drawWheel();
+void drawWheel2();
 void drawTireCube();
 void drawTurretBase();
 void drawTurret();
 void drawSensor();
 void drawLeftCap();
 void drawRightCap();
+void headAim();
 
 int main(int argc, char* argv[])
 {
@@ -291,29 +307,41 @@ void initSubdivisionCurve() {
 	y = 4 * sin(M_PI*0.5);
 	subcurve.controlPoints[0].x = x;
 	subcurve.controlPoints[0].y = y;
+	subcurve2.controlPoints[0].x = -subcurve.controlPoints[0].x;
+	subcurve2.controlPoints[0].y = subcurve.controlPoints[0].y;
 
 	x = 4 * cos(M_PI*0.25);
 	y = 4 * sin(M_PI*0.25);
 	subcurve.controlPoints[1].x = x;
 	subcurve.controlPoints[1].y = y;
+	subcurve2.controlPoints[1].x = -subcurve.controlPoints[1].x;
+	subcurve2.controlPoints[1].y = subcurve.controlPoints[1].y;
 
 	x = 4 * cos(M_PI*0.0);
 	y = 4 * sin(M_PI*0.0);
 	subcurve.controlPoints[2].x = x;
 	subcurve.controlPoints[2].y = y;
+	subcurve2.controlPoints[2].x = -subcurve.controlPoints[2].x;
+	subcurve2.controlPoints[2].y = subcurve.controlPoints[2].y;
 
 	x = 4 * cos(-M_PI*0.25);
 	y = 4 * sin(-M_PI*0.25);
 	subcurve.controlPoints[3].x = x;
 	subcurve.controlPoints[3].y = y;
+	subcurve2.controlPoints[3].x = -subcurve.controlPoints[3].x;
+	subcurve2.controlPoints[3].y = subcurve.controlPoints[3].y;
 
 	x = 4 * cos(-M_PI * 0.5);
 	y = 4 * sin(-M_PI * 0.5);
 	subcurve.controlPoints[4].x = x;
 	subcurve.controlPoints[4].y = y;
+	subcurve2.controlPoints[4].x = -subcurve.controlPoints[4].x;
+	subcurve2.controlPoints[0].y = subcurve.controlPoints[4].y;
 
 	subcurve.numControlPoints = 5;
 	subcurve.subdivisionSteps = 4;
+	subcurve2.numControlPoints = 5;
+	subcurve2.subdivisionSteps = 4;
 }
 
 void initControlPoints(){
@@ -366,6 +394,7 @@ void mouseButtonHandler(int button, int state, int xMouse, int yMouse)
 			if (hoveredCircle > -1) {
 				screenToWorldCoordinates(xMouse, yMouse, &circles[hoveredCircle].circleCenter.x, &circles[hoveredCircle].circleCenter.y);
 				screenToWorldCoordinates(xMouse, yMouse, &subcurve.controlPoints[hoveredCircle].x, &subcurve.controlPoints[hoveredCircle].y);
+				screenToWorldCoordinates(xMouse, yMouse, &subcurve2.controlPoints[hoveredCircle].x, &subcurve2.controlPoints[hoveredCircle].y);
 			}
 			break;
 		case GLUT_UP:
@@ -460,6 +489,7 @@ void keyboardHandler(unsigned char key, int x, int y)
 		break;
 	case 'a':
 		// code to create timer and call animation handler
+		robotCounter = 0;
 		stop = false;
 		glutTimerFunc(FPS, animationHandler, 0);
 		// Use this to set to 3D window and redraw it
@@ -469,16 +499,27 @@ void keyboardHandler(unsigned char key, int x, int y)
 	case 'r':
 		// reset object position at beginning of curve
 		curveIndex = 0;
+		curveIndex2 = 0;
 		rotateAngle = 0;
 		forwardVector();
 		if (newXPoint < 0)
 		{
-			rotationDirection = 1;
+			rotationDirectionX = 1;
 		}
 		else
 		{
-			rotationDirection = -1;
+			rotationDirectionX = -1;
 		}
+		/*
+		if (headXPoint > 0)
+		{
+			rotationDirectionY = -1;
+		}
+		else
+		{
+			rotationDirectionY = 1;
+		}
+		*/
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
@@ -496,18 +537,18 @@ void keyboardHandler(unsigned char key, int x, int y)
 		break;
 	case 'm':
 		//shift right
-		if (offset < 10)
+		if (cannonXLocation < 10)
 		{
-			offset += 1;
+			cannonXLocation += 1;
 		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
 	case 'M':
 		//shift left
-		if (offset > -10)
+		if (cannonXLocation > -10)
 		{
-			offset -= 1;
+			cannonXLocation -= 1;
 		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
@@ -624,16 +665,44 @@ void animationHandler(int param)
 			stop = true;
 		}
 		forwardVector();
-		curveIndex += 1;
-		rotateAngle += 15;
+		robotCounter += 1;
+		if (robotCounter == 5)
+		{
+			robotCounter = 0;
+			rotateAngle += 15;
+			curveIndex += 1;
+			if (curveIndex2 <= subcurve2.numCurvePoints - 4)
+			{
+				curveIndex2 += 2;
+				rotateAngle2 += 30;
+			}
+		}
 		if (newXPoint < 0)
 		{
-			rotationDirection = 1;
+			rotationDirectionX = 1;
 		}
 		else
 		{
-			rotationDirection = -1;
+			rotationDirectionX = -1;
 		}
+		if (new2XPoint < 0)
+		{
+			rotationDirection2X = 1;
+		}
+		else
+		{
+			rotationDirection2X = -1;
+		}
+		/*
+		if (headXPoint > 0)
+		{
+			rotationDirectionY = 0;
+		}
+		else
+		{
+			rotationDirectionY = 1;
+		}
+		*/
 		glutPostRedisplay();
 		glutTimerFunc(FPS, animationHandler, 0);
 	}
@@ -645,6 +714,17 @@ void forwardVector()
 	newXPoint = subcurve.curvePoints[curveIndex + 1].x - subcurve.curvePoints[curveIndex].x;
 	newYPoint = subcurve.curvePoints[curveIndex + 1].y - subcurve.curvePoints[curveIndex].y;
 	angle = atan(newYPoint / newXPoint) * 180 / M_PI;
+	new2XPoint = subcurve2.curvePoints[curveIndex2 + 1].x - subcurve2.curvePoints[curveIndex2].x;
+	new2YPoint = subcurve2.curvePoints[curveIndex2 + 1].y - subcurve2.curvePoints[curveIndex2].y;
+	angle2 = atan(new2YPoint / new2XPoint) * 180 / M_PI;
+}
+
+void headAim()
+{
+	headXPoint = cannonXLocation - subcurve.curvePoints[curveIndex].x;
+	headYPoint = cannonZLocation - subcurve.curvePoints[curveIndex].y;
+	headAngle = atan(headYPoint / headXPoint) * 180 / M_PI;
+	
 }
 
 void display3D()
@@ -674,10 +754,22 @@ void draw3DSubdivisionCurve()
 
 	glColor3f(1.0, 0.0, 0.0);
 	glPushMatrix();
-	//glutSolidCube(1.0);
 	glBegin(GL_LINE_STRIP);
 	for (i = 0; i < subcurve.numCurvePoints; i++) {
 		glVertex3f(subcurve.curvePoints[i].x, 0.0, -subcurve.curvePoints[i].y * Z_OFFSET);
+	}
+	glEnd();
+	glPopMatrix();
+
+	computeSubdivisionCurve(&subcurve2);
+
+	int n = 0;
+
+	glColor3f(1.0, 0.0, 0.0);
+	glPushMatrix();
+	glBegin(GL_LINE_STRIP);
+	for (n = 0; n < subcurve2.numCurvePoints; n++) {
+		glVertex3f(subcurve2.curvePoints[n].x, 0.0, -subcurve2.curvePoints[n].y * Z_OFFSET);
 	}
 	glEnd();
 	glPopMatrix();
@@ -747,16 +839,42 @@ void drawRobot()
 
 }
 
+void drawRobot2()
+{
+	//draws the robot with respect to keyboard commands
+	glPushMatrix();
+	// spin robot on base.
+
+	//draw the robot
+	drawHead();
+	drawRightArm();
+	drawWheel2();
+	glPopMatrix();
+
+	// don't want to spin fixed base
+	//drawLowerBody();
+
+	glPopMatrix();
+
+}
+
 
 void drawHead()
 {
+	headAim();
 	glPushMatrix();
 	// Position head with respect to arm
 	glTranslatef(-(upperArmWidth), 0.0, 0.0);// this will be done last
 	glTranslatef(0, 0.5 * upperArmLength - 0.5 * headLength, 0);
 
 	// rotate head according to keyboard commands
-	glRotatef(headAngle, 1.0, 0.0, 0.0);
+	/*
+	glRotatef(90*rotationDirectionY -  headAngle, 0.0, 1.0, 0.0);
+	glRotatef(90, 0, 1, 0);
+	glRotatef(-angle, 0, 1, 0);
+	glRotatef(90, 0, -rotationDirectionX, 0);
+	*/
+	
 
 	//draws next two components with respect to itself, necessary for aiming turret.
 	drawTurretBase();
@@ -767,7 +885,7 @@ void drawHead()
 	glMaterialfv(GL_FRONT, GL_SPECULAR, robotBody_mat_specular);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, robotBody_mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SHININESS, robotBody_mat_shininess);
-
+	
 	// Build Head
 	glPushMatrix();
 	glScalef(headWidth, headLength, headDepth);
@@ -797,6 +915,33 @@ void drawWheel() {
 	// Position wheel with respect to parent (robot)
 	glTranslatef(0.5 * robotBodyWidth, -0.5 * robotBodyLength, 0); // this will be done last
 	glRotatef(rotateAngle, 1, 0, 0);
+
+	//draws all components based around itself.
+	drawRightCap();
+	drawLeftCap();
+	drawTireCube();
+
+	// draws wheel
+	glPushMatrix();
+	glScalef(wheelInternalLength, wheelInternalRadius, wheelInternalRadius);
+	glRotatef(-90.0, 0.0, 1.0, 0.0);
+	gluCylinder(gluNewQuadric(), 1.0, 1.0, 1.0, 20, 10);
+	glPopMatrix();
+
+	glPopMatrix();
+}
+
+void drawWheel2() {
+	//draws wheel and all components necessary such as the caps to make the wheel solid and the "tire" cube
+	glMaterialfv(GL_FRONT, GL_AMBIENT, robotArm_mat_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, robotArm_mat_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, robotArm_mat_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, robotArm_mat_shininess);
+
+	glPushMatrix();
+	// Position wheel with respect to parent (robot)
+	glTranslatef(0.5 * robotBodyWidth, -0.5 * robotBodyLength, 0); // this will be done last
+	glRotatef(rotateAngle2, 1, 0, 0);
 
 	//draws all components based around itself.
 	drawRightCap();
@@ -947,13 +1092,22 @@ void drawBot()
 	}
 	else if (botType == SPHERE)
 	{
-		//this draws and moves sphere.
+		glPushMatrix();
+
+		glTranslatef(subcurve2.curvePoints[curveIndex2].x, robotYOffset, -subcurve2.curvePoints[curveIndex2].y * Z_OFFSET);
+
+		glRotatef(90, 0, -rotationDirection2X, 0);
+		glRotatef(angle2, 0, 1, 0);
+
+		drawRobot2();
+		glPopMatrix();
+
 		glPushMatrix();
 		//glTranslatef(subcurve.curvePoints[curveIndex].x, 0, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
 		//glutSolidSphere(0.9, 20, 20);
 		glTranslatef(subcurve.curvePoints[curveIndex].x, robotYOffset, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
 		//I rotate by an additional 90 degrees since otherwise, it would be perpindicular to the line
-		glRotatef(90, 0, -rotationDirection, 0);
+		glRotatef(90, 0, -rotationDirectionX, 0);
 		glRotatef(angle, 0, 1, 0);
 		//glRotatef(rotateAngle, 0, 0, rotationDirection);
 
@@ -968,7 +1122,7 @@ void drawBot()
 		//this determines the direction the wheel looks in
 		glRotatef(angle, 0, 1, 0);
 		//this angle determines the turn of the wheel
-		glRotatef(rotateAngle, 0, 0, rotationDirection);
+		glRotatef(rotateAngle, 0, 0, rotationDirectionX);
 		//draws the cube that shows that the wheel rotates
 		drawCubeTire();
 		glTranslatef(0, 0, -0.5 * cylinderHeight);
@@ -986,7 +1140,7 @@ void drawCannon()
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, robotBody_mat_specular);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, robotBody_mat_diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, robotBody_mat_shininess);
-	glTranslatef(offset, 0, 10);
+	glTranslatef(cannonXLocation, 0, cannonZLocation);
 	glRotatef(-90, 1, 0, 0);
 	glutSolidCone(cylinderRadius, cylinderHeight, 20, 20);
 	glPopMatrix();
