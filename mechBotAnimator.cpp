@@ -1,3 +1,5 @@
+#pragma warning(disable : 4996)
+
 #include <stdio.h>
 #include <windows.h>
 #include <GL/glew.h>
@@ -62,6 +64,8 @@ GLfloat robotLowerBody_mat_ambient[] = { 0.25f, 0.25f, 0.25f, 1.0f };
 GLfloat robotLowerBody_mat_diffuse[] = { 0.4f, 0.4f, 0.4f, 1.0f };
 GLfloat robotLowerBody_mat_specular[] = { 0.774597f, 0.774597f, 0.774597f, 1.0f };
 GLfloat robotLowerBody_mat_shininess[] = { 76.8F };
+
+void myInit();
 
 enum BotType { CUBE, SPHERE, WHEEL};
 BotType botType = SPHERE;
@@ -165,6 +169,7 @@ void drawSensor();
 void drawLeftCap();
 void drawRightCap();
 void headAim();
+void textureACube(int texture_id);
 
 int main(int argc, char* argv[])
 {
@@ -192,12 +197,13 @@ int main(int argc, char* argv[])
 	// The 3D Window
 	window3D = glutCreateWindow("Mech Bot"); 
 	glutPositionWindow(900,100);  
+	
 	glutDisplayFunc(display3D);
 	glutReshapeFunc(reshape3D);
 	glutMouseFunc(mouseButtonHandler3D);
 	glutMouseWheelFunc(mouseScrollWheelHandler3D);
 	glutMotionFunc(mouseMotionHandler3D);
-
+	myInit();
 	// Initialize the 3D system
 	init3DSurfaceWindow();
 
@@ -985,6 +991,83 @@ void drawRightCap() {
 	glPopMatrix();
 }
 
+void textureACube(int texture_id)
+{
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture_id); // top face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, 1.0f, -1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, 1.0f, -1.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, texture_id); // right face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(1.0f, 1.0f, -1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, -1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, -1.0f, -1.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, texture_id); // left face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, 1.0f, -1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(-1.0f, -1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(-1.0f, 1.0f, 1.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, texture_id); // bottom face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, -1.0f, 1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, -1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, -1.0f, -1.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, texture_id); // back face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, 1.0f, -1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, 1.0f, -1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, -1.0f, -1.0f);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, texture_id); // front face of cube
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, -1.0f, 1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, -1.0f, 1.0f);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+}
+
 void drawTurretBase() {
 	//draws the base of the turret as well as the turret barrel itself.
 	glPushMatrix();
@@ -995,11 +1078,209 @@ void drawTurretBase() {
 
 	// Build Head
 	glPushMatrix();
-	glScalef(turretBaseWidth, turretBaseLength, turretBaseDepth);
-	glutSolidCube(1.0);
+	glScalef(turretBaseWidth/1.25, turretBaseLength/1.25, turretBaseDepth/1.25);
+	textureACube(2001);
+	
 	glPopMatrix();
 
 	glPopMatrix();
+}
+
+typedef unsigned char  byte;
+typedef unsigned short word;
+typedef unsigned long  dword;
+typedef unsigned short ushort;
+typedef unsigned long  ulong;
+
+typedef struct RGB
+{
+	byte r, g, b;
+} RGB;
+
+typedef struct RGBpixmap
+{
+	int nRows, nCols;
+	RGB* pixel;
+} RGBpixmap;
+
+
+
+RGBpixmap pix[6]; // make six empty pixmaps, one for each side of cube
+
+float xSpeed = 1.0, ySpeed = 1.0, xAngle = 0, yAngle = 0;
+
+
+void makeCheckerboard(RGBpixmap* p)
+{
+	long count = 0;
+	int i, j, c;
+
+	p->nRows = p->nCols = 64;
+	p->pixel = (RGB*)malloc(3 * p->nRows * p->nCols);
+
+	for (i = 0; i < p->nRows; i++)
+		for (j = 0; j < p->nCols; j++)
+		{
+			c = (((i / 8) + (j / 8)) % 2) * 255;
+			p->pixel[count].r = c;
+			p->pixel[count].g = c;
+			p->pixel[count++].b = 0;
+		}
+}
+
+void fskip(FILE* fp, int num_bytes)
+{
+	int i;
+	for (i = 0; i < num_bytes; i++)
+		fgetc(fp);
+}
+
+ushort getShort(FILE* fp) //helper function
+{ //BMP format uses little-endian integer types
+  // get a 2-byte integer stored in little-endian form
+	char ic;
+	ushort ip;
+	ic = fgetc(fp); ip = ic;  //first byte is little one 
+	ic = fgetc(fp);  ip |= ((ushort)ic << 8); // or in high order byte
+	return ip;
+}
+//<<<<<<<<<<<<<<<<<<<< getLong >>>>>>>>>>>>>>>>>>>
+ulong getLong(FILE* fp) //helper function
+{  //BMP format uses little-endian integer types
+   // get a 4-byte integer stored in little-endian form
+	ulong ip = 0;
+	char ic = 0;
+	unsigned char uc = ic;
+	ic = fgetc(fp); uc = ic; ip = uc;
+	ic = fgetc(fp); uc = ic; ip |= ((ulong)uc << 8);
+	ic = fgetc(fp); uc = ic; ip |= ((ulong)uc << 16);
+	ic = fgetc(fp); uc = ic; ip |= ((ulong)uc << 24);
+	return ip;
+}
+
+void readBMPFile(RGBpixmap* pm, const char* file)
+{
+	FILE* fp;
+	long index;
+	int k, row, col, numPadBytes, nBytesInRow;
+	char ch1, ch2;
+	ulong fileSize;
+	ushort reserved1;    // always 0
+	ushort reserved2;     // always 0 
+	ulong offBits; // offset to image - unreliable
+	ulong headerSize;     // always 40
+	ulong numCols; // number of columns in image
+	ulong numRows; // number of rows in image
+	ushort planes;      // always 1 
+	ushort bitsPerPixel;    //8 or 24; allow 24 here
+	ulong compression;      // must be 0 for uncompressed 
+	ulong imageSize;       // total bytes in image 
+	ulong xPels;    // always 0 
+	ulong yPels;    // always 0 
+	ulong numLUTentries;    // 256 for 8 bit, otherwise 0 
+	ulong impColors;       // always 0 
+	long count;
+	char dum;
+
+	/* open the file */
+	if ((fp = fopen(file, "rb")) == NULL)
+	{
+		printf("Error opening file %s.\n", file);
+		exit(1);
+	}
+
+	/* check to see if it is a valid bitmap file */
+	if (fgetc(fp) != 'B' || fgetc(fp) != 'M')
+	{
+		fclose(fp);
+		printf("%s is not a bitmap file.\n", file);
+		exit(1);
+	}
+
+	fileSize = getLong(fp);
+	reserved1 = getShort(fp);    // always 0
+	reserved2 = getShort(fp);     // always 0 
+	offBits = getLong(fp); // offset to image - unreliable
+	headerSize = getLong(fp);     // always 40
+	numCols = getLong(fp); // number of columns in image
+	numRows = getLong(fp); // number of rows in image
+	planes = getShort(fp);      // always 1 
+	bitsPerPixel = getShort(fp);    //8 or 24; allow 24 here
+	compression = getLong(fp);      // must be 0 for uncompressed 
+	imageSize = getLong(fp);       // total bytes in image 
+	xPels = getLong(fp);    // always 0 
+	yPels = getLong(fp);    // always 0 
+	numLUTentries = getLong(fp);    // 256 for 8 bit, otherwise 0 
+	impColors = getLong(fp);       // always 0 
+
+	if (bitsPerPixel != 24)
+	{ // error - must be a 24 bit uncompressed image
+		printf("Error bitsperpixel not 24\n");
+		exit(1);
+	}
+	//add bytes at end of each row so total # is a multiple of 4
+	// round up 3*numCols to next mult. of 4
+	nBytesInRow = ((3 * numCols + 3) / 4) * 4;
+	numPadBytes = nBytesInRow - 3 * numCols; // need this many
+	pm->nRows = numRows; // set class's data members
+	pm->nCols = numCols;
+	pm->pixel = (RGB*)malloc(3 * numRows * numCols);//make space for array
+	if (!pm->pixel) return; // out of memory!
+	count = 0;
+	dum;
+	for (row = 0; row < numRows; row++) // read pixel values
+	{
+		for (col = 0; col < numCols; col++)
+		{
+			int r, g, b;
+			b = fgetc(fp); g = fgetc(fp); r = fgetc(fp); //read bytes
+			pm->pixel[count].r = r; //place them in colors
+			pm->pixel[count].g = g;
+			pm->pixel[count++].b = b;
+		}
+		fskip(fp, numPadBytes);
+	}
+	fclose(fp);
+}
+
+void setTexture(RGBpixmap* p, GLuint textureID)
+{
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, p->nCols, p->nRows, 0, GL_RGB,
+		GL_UNSIGNED_BYTE, p->pixel);
+}
+
+void myInit(void)
+{
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
+	/*
+	glEnable(GL_TEXTURE_2D);
+	*/
+
+	makeCheckerboard(&pix[0]);         // make texture for side 0 procedurally
+	setTexture(&pix[0], 2000);          // assign a unique identifier
+	readBMPFile(&pix[1], "clover01.bmp");  // read texture for side 1 from image
+	setTexture(&pix[1], 2001);
+	readBMPFile(&pix[2], "robotBody.bmp");  // read texture for side 2 from image
+	setTexture(&pix[2], 2002);           // assign a unique identifier
+	readBMPFile(&pix[3], "professor.bmp");  // read texture for side 3 from image
+	setTexture(&pix[3], 2003);
+	makeCheckerboard(&pix[4]);         // make texture for side 4 procedurally
+	setTexture(&pix[4], 2004);           // assign a unique identifier
+	readBMPFile(&pix[5], "tiles01.bmp");  // read texture for side 5 from image
+	setTexture(&pix[5], 2005);
+
+	glViewport(0, 0, 640, 480);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60.0, 640.0 / 480.0, 1.0, 30.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslated(0.0, 0.0, -4.0); // move camera back from default position
+
 }
 
 void drawTurret()
