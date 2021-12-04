@@ -894,8 +894,8 @@ void drawHead()
 	
 	// Build Head
 	glPushMatrix();
-	glScalef(headWidth, headLength, headDepth);
-	glutSolidCube(1.0);
+	glScalef(headWidth/2, headLength/2, headDepth/2);
+	textureACube(2001);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -906,7 +906,8 @@ void drawTireCube() {
 	//draws a tire that goes on the wheel to help show it rotating as the robot moves
 	glPushMatrix();
 	glTranslatef(-(0.3 * wheelInternalLength + 0.3 * wheelInternalLength), 0.3 * wheelInternalLength + 0.3 * wheelInternalLength, 0);
-	glutSolidCube(0.3 * wheelInternalLength);
+	glScalef(0.3, 0.3, 0.3);
+	textureACube(2001);
 	glPopMatrix();
 }
 
@@ -1299,8 +1300,8 @@ void drawTurret()
 
 	// build turret barrel
 	glPushMatrix();
-	glScalef(turretWidth, turretLength, turretWidth);
-	glutSolidCube(1.0);
+	glScalef(turretWidth/1.25, turretLength/1.25, turretWidth/1.25);
+	textureACube(2001);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -1342,8 +1343,8 @@ void drawRightArm()
 
 	// build arm
 	glPushMatrix();
-	glScalef(upperArmWidth, upperArmLength, upperArmWidth);
-	glutSolidCube(1.0);
+	glScalef(upperArmWidth/1.8, upperArmLength/1.8, upperArmWidth/1.8);
+	textureACube(2001);
 	glPopMatrix();
 
 	glPopMatrix();
