@@ -101,6 +101,8 @@ int angle2 = 0;
 int animate = 0;
 int delay = 15; // milliseconds
 
+bool FP = false;
+
 GLdouble worldLeft = -12;
 GLdouble worldRight = 12;
 GLdouble worldBottom = -9;
@@ -196,7 +198,7 @@ int main(int argc, char* argv[])
 
 	// The 3D Window
 	window3D = glutCreateWindow("Mech Bot"); 
-	glutPositionWindow(900,100);  
+	glutPositionWindow(300,100);  
 	
 	glutDisplayFunc(display3D);
 	glutReshapeFunc(reshape3D);
@@ -516,22 +518,15 @@ void keyboardHandler(unsigned char key, int x, int y)
 		{
 			rotationDirectionX = -1;
 		}
-		/*
-		if (headXPoint > 0)
-		{
-			rotationDirectionY = -1;
-		}
-		else
-		{
-			rotationDirectionY = 1;
-		}
-		*/
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
 	case 'c':
-		//set shape as cube
-		botType = CUBE;
+		//Third Person
+		eyeX = 0.0;
+		eyeY = 6.0;
+		eyeZ = 22.0;
+		FP = false;
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
@@ -546,6 +541,10 @@ void keyboardHandler(unsigned char key, int x, int y)
 		if (cannonXLocation < 10)
 		{
 			cannonXLocation += 1;
+			if (FP == true)
+			{
+				eyeX = cannonXLocation;
+			}
 		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
@@ -555,13 +554,20 @@ void keyboardHandler(unsigned char key, int x, int y)
 		if (cannonXLocation > -10)
 		{
 			cannonXLocation -= 1;
+			if (FP == true)
+			{
+				eyeX = cannonXLocation;
+			}
 		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
-	case 'w':
-		//set shape as wheel
-		botType = WHEEL;
+	case 'C':
+		//First Person
+		eyeX = cannonXLocation;
+		eyeY = cylinderHeight + 1;
+		eyeZ = cannonZLocation;
+		FP = true;
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
@@ -699,16 +705,6 @@ void animationHandler(int param)
 		{
 			rotationDirection2X = -1;
 		}
-		/*
-		if (headXPoint > 0)
-		{
-			rotationDirectionY = 0;
-		}
-		else
-		{
-			rotationDirectionY = 1;
-		}
-		*/
 		glutPostRedisplay();
 		glutTimerFunc(FPS, animationHandler, 0);
 	}
@@ -895,7 +891,7 @@ void drawHead()
 	// Build Head
 	glPushMatrix();
 	glScalef(headWidth/2, headLength/2, headDepth/2);
-	textureACube(2001);
+	textureACube(2002);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -907,7 +903,7 @@ void drawTireCube() {
 	glPushMatrix();
 	glTranslatef(-(0.3 * wheelInternalLength + 0.3 * wheelInternalLength), 0.3 * wheelInternalLength + 0.3 * wheelInternalLength, 0);
 	glScalef(0.3, 0.3, 0.3);
-	textureACube(2001);
+	textureACube(2002);
 	glPopMatrix();
 }
 
@@ -932,7 +928,13 @@ void drawWheel() {
 	glPushMatrix();
 	glScalef(wheelInternalLength, wheelInternalRadius, wheelInternalRadius);
 	glRotatef(-90.0, 0.0, 1.0, 0.0);
-	gluCylinder(gluNewQuadric(), 1.0, 1.0, 1.0, 20, 10);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2002);
+	GLUquadric* wheel = gluNewQuadric();
+	gluQuadricTexture(wheel, GL_TRUE);
+	gluCylinder(wheel, 1.0, 1.0, 1.0, 20, 10);
+	gluDeleteQuadric(wheel);
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -959,7 +961,13 @@ void drawWheel2() {
 	glPushMatrix();
 	glScalef(wheelInternalLength, wheelInternalRadius, wheelInternalRadius);
 	glRotatef(-90.0, 0.0, 1.0, 0.0);
-	gluCylinder(gluNewQuadric(), 1.0, 1.0, 1.0, 20, 10);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2002);
+	GLUquadric* wheel = gluNewQuadric();
+	gluQuadricTexture(wheel, GL_TRUE);
+	gluCylinder(wheel, 1.0, 1.0, 1.0, 20, 10);
+	gluDeleteQuadric(wheel);
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -973,7 +981,14 @@ void drawLeftCap() {
 	// draws and rotates left cap
 	glPushMatrix();
 	glRotatef(-90.0, 0.0, 1.0, 0.0);
-	gluDisk(gluNewQuadric(), 0, wheelInternalRadius, 40, 40);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2002);
+	GLUquadric* wheelCap = gluNewQuadric();
+	gluQuadricTexture(wheelCap, GL_TRUE);
+	gluDisk(wheelCap, 0, wheelInternalRadius, 40, 40);
+	gluDeleteQuadric(wheelCap);
+	glDisable(GL_TEXTURE_2D);
+	
 	glPopMatrix();
 
 	glPopMatrix();
@@ -986,7 +1001,13 @@ void drawRightCap() {
 	// draws and rotates right cap
 	glPushMatrix();
 	glRotatef(90.0, 0.0, 1.0, 0.0);
-	gluDisk(gluNewQuadric(), 0, wheelInternalRadius, 40, 40);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2002);
+	GLUquadric* wheelCap = gluNewQuadric();
+	gluQuadricTexture(wheelCap, GL_TRUE);
+	gluDisk(wheelCap, 0, wheelInternalRadius, 40, 40);
+	gluDeleteQuadric(wheelCap);
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -1080,7 +1101,7 @@ void drawTurretBase() {
 	// Build Head
 	glPushMatrix();
 	glScalef(turretBaseWidth/1.25, turretBaseLength/1.25, turretBaseDepth/1.25);
-	textureACube(2001);
+	textureACube(2002);
 	
 	glPopMatrix();
 
@@ -1256,7 +1277,7 @@ void setTexture(RGBpixmap* p, GLuint textureID)
 void myInit(void)
 {
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	/*
 	glEnable(GL_TEXTURE_2D);
 	*/
@@ -1267,11 +1288,11 @@ void myInit(void)
 	setTexture(&pix[1], 2001);
 	readBMPFile(&pix[2], "robotBody.bmp");  // read texture for side 2 from image
 	setTexture(&pix[2], 2002);           // assign a unique identifier
-	readBMPFile(&pix[3], "professor.bmp");  // read texture for side 3 from image
+	readBMPFile(&pix[3], "playerTex.bmp");  // read texture for side 3 from image
 	setTexture(&pix[3], 2003);
 	makeCheckerboard(&pix[4]);         // make texture for side 4 procedurally
 	setTexture(&pix[4], 2004);           // assign a unique identifier
-	readBMPFile(&pix[5], "tiles01.bmp");  // read texture for side 5 from image
+	readBMPFile(&pix[5], "ground.bmp");  // read texture for side 5 from image
 	setTexture(&pix[5], 2005);
 
 	glViewport(0, 0, 640, 480);
@@ -1301,7 +1322,7 @@ void drawTurret()
 	// build turret barrel
 	glPushMatrix();
 	glScalef(turretWidth/1.25, turretLength/1.25, turretWidth/1.25);
-	textureACube(2001);
+	textureACube(2002);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -1320,7 +1341,14 @@ void drawSensor() {
 
 	//sensor is drawn and move with respect to the head
 	glTranslatef(0, 0, 0.5 * headDepth);
-	glutSolidTorus(innerRadiusSensor, outerRadiusSensor, 4, 60);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2002);
+	GLUquadric* sensor = gluNewQuadric();
+	gluQuadricTexture(sensor, GL_TRUE);
+	gluSphere(sensor, innerRadiusSensor + outerRadiusSensor, 6, 60);
+	gluDeleteQuadric(sensor);
+	glDisable(GL_TEXTURE_2D);
+	//glutSolidTorus(innerRadiusSensor, outerRadiusSensor, 4, 60);
 
 	glPopMatrix();
 }
@@ -1344,7 +1372,7 @@ void drawRightArm()
 	// build arm
 	glPushMatrix();
 	glScalef(upperArmWidth/1.8, upperArmLength/1.8, upperArmWidth/1.8);
-	textureACube(2001);
+	textureACube(2002);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -1424,7 +1452,16 @@ void drawCannon()
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, robotBody_mat_shininess);
 	glTranslatef(cannonXLocation, 0, cannonZLocation);
 	glRotatef(-90, 1, 0, 0);
-	glutSolidCone(cylinderRadius, cylinderHeight, 20, 20);
+	glScalef(cylinderRadius, cylinderHeight, cylinderRadius);
+	/*
+	eyeX = cannonXLocation;
+	eyeY = cylinderHeight;
+	eyeZ = cannonZLocation;
+	eyeX = 0.0; 
+	eyeY = 6.0; 
+	eyeZ = 22.0;
+	*/
+	textureACube(2003);
 	glPopMatrix();
 }
 
@@ -1434,12 +1471,29 @@ void drawGround() {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, groundMat_specular);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, groundMat_diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, groundMat_shininess);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 2005);
 	glBegin(GL_QUADS);
 	glNormal3f(0, 1, 0);
+	glTexCoord2f(0.0, 0.0);
 	glVertex3f(-12.0f, -1.0f, -12.0f);
+	glTexCoord2f(0.0, 1.0);
 	glVertex3f(-12.0f, -1.0f, 12.0f);
+	glTexCoord2f(1.0, 1.0);
 	glVertex3f(12.0f, -1.0f, 12.0f);
+	glTexCoord2f(1.0, 0.0);
 	glVertex3f(12.0f, -1.0f, -12.0f);
+	glDisable(GL_TEXTURE_2D);
+	/*
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-1.0f, -1.0f, 1.0f);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(-1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(1.0f, 1.0f, 1.0f);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(1.0f, -1.0f, 1.0f);
+	*/
 	glEnd();
 	glPopMatrix();
 }
