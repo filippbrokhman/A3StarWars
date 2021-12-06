@@ -103,6 +103,14 @@ int delay = 15; // milliseconds
 
 bool FP = false;
 
+int projSize = 1;
+bool projFlight = false;
+int flightDistance = 0;
+
+bool robotDead1 = false;
+bool robotDead2 = false;
+bool lost = false;
+
 GLdouble worldLeft = -12;
 GLdouble worldRight = 12;
 GLdouble worldBottom = -9;
@@ -172,6 +180,7 @@ void drawLeftCap();
 void drawRightCap();
 void headAim();
 void textureACube(int texture_id);
+void drawProjectile();
 
 int main(int argc, char* argv[])
 {
@@ -504,11 +513,25 @@ void keyboardHandler(unsigned char key, int x, int y)
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
+	case 'h':
+		printf("Q/q for quit\n");
+		printf("a to start the game\n");
+		printf("spacebar to charge up your projectile (hit multiple times)\n");
+		printf("r to reset the game\n");
+		printf("c for third person, C for first person\n");
+		printf("m to shift player right, M for left\n");
+		break;
 	case 'r':
 		// reset object position at beginning of curve
 		curveIndex = 0;
 		curveIndex2 = 0;
 		rotateAngle = 0;
+		projSize = 1;
+		projFlight = false;
+		flightDistance = 0;
+		robotDead1 = false;
+		robotDead2 = false;
+		lost = false;
 		forwardVector();
 		if (newXPoint < 0)
 		{
@@ -568,6 +591,18 @@ void keyboardHandler(unsigned char key, int x, int y)
 		eyeY = cylinderHeight + 1;
 		eyeZ = cannonZLocation;
 		FP = true;
+		glutSetWindow(window3D);
+		glutPostRedisplay();
+		break;
+	case 32:
+		if (projSize <= 45)
+		{
+			projSize += 4.5;
+		}
+		if (projSize >= 44)
+		{
+			projFlight = true;
+		}
 		glutSetWindow(window3D);
 		glutPostRedisplay();
 		break;
@@ -669,12 +704,18 @@ void reshape3D(int w, int h)
 
 void animationHandler(int param)
 {
+	int projPosition;
 	if (!stop)
 	{
 		//recursive function that allows robot to move forward automatically with respect to inputs
 		if (curveIndex == subcurve.numCurvePoints - 3) 
 		{
 			stop = true;
+			if (!robotDead1)
+			{
+				lost = true;
+				printf("you lose");
+			}
 		}
 		forwardVector();
 		robotCounter += 1;
@@ -688,6 +729,26 @@ void animationHandler(int param)
 				curveIndex2 += 2;
 				rotateAngle2 += 30;
 			}
+			if (curveIndex2 >= subcurve2.numCurvePoints - 4 && !robotDead2)
+			{
+				lost = true;
+				stop = true;
+				printf("you lose");
+			}
+		}
+		projPosition = flightDistance - cannonZLocation;
+		if (projPosition > subcurve.curvePoints[curveIndex].y)
+		{
+			robotDead1 = true;
+		}
+		if (projPosition > subcurve2.curvePoints[curveIndex2].y)
+		{
+			robotDead2 = true;
+		}
+		if (!lost && robotDead1 && robotDead2)
+		{
+			stop = true;
+			printf("you win");
 		}
 		if (newXPoint < 0)
 		{
@@ -704,6 +765,10 @@ void animationHandler(int param)
 		else
 		{
 			rotationDirection2X = -1;
+		}
+		if (projFlight)
+		{
+			flightDistance += 1;
 		}
 		glutPostRedisplay();
 		glutTimerFunc(FPS, animationHandler, 0);
@@ -863,19 +928,11 @@ void drawRobot2()
 
 void drawHead()
 {
-	headAim();
+	//headAim();
 	glPushMatrix();
 	// Position head with respect to arm
 	glTranslatef(-(upperArmWidth), 0.0, 0.0);// this will be done last
 	glTranslatef(0, 0.5 * upperArmLength - 0.5 * headLength, 0);
-
-	// rotate head according to keyboard commands
-	/*
-	glRotatef(90*rotationDirectionY -  headAngle, 0.0, 1.0, 0.0);
-	glRotatef(90, 0, 1, 0);
-	glRotatef(-angle, 0, 1, 0);
-	glRotatef(90, 0, -rotationDirectionX, 0);
-	*/
 	
 
 	//draws next two components with respect to itself, necessary for aiming turret.
@@ -1402,27 +1459,34 @@ void drawBot()
 	}
 	else if (botType == SPHERE)
 	{
-		glPushMatrix();
+		if (!robotDead2)
+		{
+			glPushMatrix();
 
-		glTranslatef(subcurve2.curvePoints[curveIndex2].x, robotYOffset, -subcurve2.curvePoints[curveIndex2].y * Z_OFFSET);
+			glTranslatef(subcurve2.curvePoints[curveIndex2].x, robotYOffset, -subcurve2.curvePoints[curveIndex2].y * Z_OFFSET);
 
-		glRotatef(90, 0, -rotationDirection2X, 0);
-		glRotatef(angle2, 0, 1, 0);
+			glRotatef(90, 0, -rotationDirection2X, 0);
+			glRotatef(angle2, 0, 1, 0);
 
-		drawRobot2();
-		glPopMatrix();
+			drawRobot2();
+			glPopMatrix();
+		}
+		
+		if (!robotDead1)
+		{
+			glPushMatrix();
+			//glTranslatef(subcurve.curvePoints[curveIndex].x, 0, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
+			//glutSolidSphere(0.9, 20, 20);
+			glTranslatef(subcurve.curvePoints[curveIndex].x, robotYOffset, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
+			//I rotate by an additional 90 degrees since otherwise, it would be perpindicular to the line
+			glRotatef(90, 0, -rotationDirectionX, 0);
+			glRotatef(angle, 0, 1, 0);
+			//glRotatef(rotateAngle, 0, 0, rotationDirection);
 
-		glPushMatrix();
-		//glTranslatef(subcurve.curvePoints[curveIndex].x, 0, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
-		//glutSolidSphere(0.9, 20, 20);
-		glTranslatef(subcurve.curvePoints[curveIndex].x, robotYOffset, -subcurve.curvePoints[curveIndex].y * Z_OFFSET);
-		//I rotate by an additional 90 degrees since otherwise, it would be perpindicular to the line
-		glRotatef(90, 0, -rotationDirectionX, 0);
-		glRotatef(angle, 0, 1, 0);
-		//glRotatef(rotateAngle, 0, 0, rotationDirection);
-
-		drawRobot();
-		glPopMatrix();
+			drawRobot();
+			glPopMatrix();
+		}
+		
 	}
 	else if (botType == WHEEL)
 	{
@@ -1451,17 +1515,19 @@ void drawCannon()
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, robotBody_mat_diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, robotBody_mat_shininess);
 	glTranslatef(cannonXLocation, 0, cannonZLocation);
-	glRotatef(-90, 1, 0, 0);
+	drawProjectile();
 	glScalef(cylinderRadius, cylinderHeight, cylinderRadius);
-	/*
-	eyeX = cannonXLocation;
-	eyeY = cylinderHeight;
-	eyeZ = cannonZLocation;
-	eyeX = 0.0; 
-	eyeY = 6.0; 
-	eyeZ = 22.0;
-	*/
 	textureACube(2003);
+	glPopMatrix();
+}
+
+void drawProjectile()
+{
+	glPushMatrix();
+	glTranslatef(0, 0, -flightDistance);
+	glTranslatef(0, 0.5 * cylinderHeight + 0.5, 0.5 * cylinderRadius - 0.5);
+	glScalef(projSize, 1, 1);
+	glutSolidCube(0.5);
 	glPopMatrix();
 }
 
@@ -1484,16 +1550,6 @@ void drawGround() {
 	glTexCoord2f(1.0, 0.0);
 	glVertex3f(12.0f, -1.0f, -12.0f);
 	glDisable(GL_TEXTURE_2D);
-	/*
-	glTexCoord2f(0.0, 0.0);
-	glVertex3f(-1.0f, -1.0f, 1.0f);
-	glTexCoord2f(0.0, 1.0);
-	glVertex3f(-1.0f, 1.0f, 1.0f);
-	glTexCoord2f(1.0, 1.0);
-	glVertex3f(1.0f, 1.0f, 1.0f);
-	glTexCoord2f(1.0, 0.0);
-	glVertex3f(1.0f, -1.0f, 1.0f);
-	*/
 	glEnd();
 	glPopMatrix();
 }
